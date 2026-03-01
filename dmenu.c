@@ -35,6 +35,7 @@ struct item {
 	unsigned int width;
 	struct item *left, *right;
 	int out;
+	int index;
 };
 
 static char numbers[NUMBERSBUFSIZE] = "";
@@ -48,6 +49,7 @@ static struct item *items = NULL;
 static struct item *matches, *matchend;
 static struct item *prev, *curr, *next, *sel;
 static int mon = -1, screen;
+static int print_index = 0;
 
 static Atom clip, utf8;
 static Display *dpy;
@@ -525,7 +527,11 @@ insert:
 		break;
 	case XK_Return:
 	case XK_KP_Enter:
-		puts((sel && !(ev->state & ShiftMask)) ? sel->text : text);
+		if (print_index)
+			printf("%d\n", (sel && !(ev->state & ShiftMask)) ? sel->index : -1);
+		else
+			puts((sel && !(ev->state & ShiftMask)) ? sel->text : text);
+
 		if (!(ev->state & ControlMask)) {
 			cleanup();
 			exit(0);
@@ -598,9 +604,9 @@ readstdin(void)
 		if (line[len - 1] == '\n')
 			line[len - 1] = '\0';
 		if (!(items[i].text = strdup(line)))
-			die("strdup:");
+ 			die("cannot strdup %u bytes:", strlen(line) + 1);
 		items[i].width = TEXTW(line);
-
+		items[i].index = i;
 		items[i].out = 0;
 	}
 	free(line);
@@ -773,7 +779,7 @@ setup(void)
 static void
 usage(void)
 {
-	die("usage: dmenu [-bfiv] [-l lines] [-p prompt] [-fn font] [-m monitor]\n"
+	die("usage: dmenu [-bfiv] [-l lines] [-p prompt] [-fn font] [-m monitor] [-idx]\n"
 	    "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]");
 }
 
@@ -840,7 +846,9 @@ main(int argc, char *argv[])
 		else if (!strcmp(argv[i], "-i")) { /* case-insensitive item matching */
 			fstrncmp = strncasecmp;
 			fstrstr = cistrstr;
-		} else if (i + 1 == argc)
+		} else if (!strcmp(argv[i], "-idx"))  /* adds ability to return index in list */
+			print_index = 1;
+		else if (i + 1 == argc)
 			usage();
 		/* these options take one argument */
 		else if (!strcmp(argv[i], "-l"))   /* number of lines in vertical list */
