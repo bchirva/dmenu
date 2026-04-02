@@ -29,7 +29,7 @@
 
 /* enums */
 
-enum { SchemeNorm, SchemeSel, SchemeIn, SchemeHighlight, SchemeOut, SchemeLast }; /* color schemes */
+enum { SchemeNorm, SchemeSel, SchemeIn, SchemeHigh, SchemeOut, SchemeLast }; /* color schemes */
 
 struct item {
 	char *text;
@@ -156,7 +156,7 @@ drawhighlights(struct item *item, int x, int y, int maxw)
 	char restorechar, tokens[sizeof text], *highlight,  *token;
 	int indentx, highlightlen;
 
-	drw_setscheme(drw, scheme[SchemeHighlight]);
+	drw_setscheme(drw, scheme[SchemeHigh]);
 	strcpy(tokens, text);
 	for (token = strtok(tokens, " "); token; token = strtok(NULL, " ")) {
 		highlight = fstrstr(item->text, token);
@@ -230,7 +230,7 @@ drawmenu(void)
 	drw_rect(drw, 0, 0, mw, mh, 1, 1);
 
 	if (prompt && *prompt) {
-		drw_setscheme(drw, scheme[SchemeSel]);
+		drw_setscheme(drw, scheme[SchemeHigh]);
 		x = drw_text(drw, x, 0, promptw, bh, lrpad / 2, prompt, 0);
 	}
 	/* draw input field */
@@ -847,36 +847,27 @@ readxresources(void) {
 
 		if (XrmGetResource(xdb, "dmenu.font", "*", &type, &xval))
 			fonts[0] = strdup(xval.addr);
-		else
-			fonts[0] = strdup(fonts[0]);
-		if (XrmGetResource(xdb, "dmenu.background", "*", &type, &xval))
+		if (XrmGetResource(xdb, "dmenu.background", "*", &type, &xval)) {
 			colors[SchemeNorm][ColBg] = strdup(xval.addr);
-		else
-			colors[SchemeNorm][ColBg] = strdup(colors[SchemeNorm][ColBg]);
-		if (XrmGetResource(xdb, "dmenu.foreground", "*", &type, &xval))
+            colors[SchemeHigh][ColBg] = strdup(xval.addr);
+            colors[SchemeSel][ColFg] = strdup(xval.addr);
+            colors[SchemeOut][ColFg] = strdup(xval.addr);
+        }
+		if (XrmGetResource(xdb, "dmenu.foreground", "*", &type, &xval)) {
 			colors[SchemeNorm][ColFg] = strdup(xval.addr);
-		else
-			colors[SchemeNorm][ColFg] = strdup(colors[SchemeNorm][ColFg]);
-		if (XrmGetResource(xdb, "dmenu.selbackground", "*", &type, &xval))
-			colors[SchemeSel][ColBg] = strdup(xval.addr);
-		else
-			colors[SchemeSel][ColBg] = strdup(colors[SchemeSel][ColBg]);
-		if (XrmGetResource(xdb, "dmenu.selforeground", "*", &type, &xval))
-			colors[SchemeSel][ColFg] = strdup(xval.addr);
-		else
-			colors[SchemeSel][ColFg] = strdup(colors[SchemeSel][ColFg]);
-		if (XrmGetResource(xdb, "dmenu.inputbackground", "*", &type, &xval))
-			colors[SchemeIn][ColBg] = strdup(xval.addr);
-		else
-			colors[SchemeIn][ColBg] = strdup(colors[SchemeIn][ColBg]);
-		if (XrmGetResource(xdb, "dmenu.inputforeground", "*", &type, &xval))
-			colors[SchemeIn][ColFg] = strdup(xval.addr);
-		else
-			colors[SchemeIn][ColFg] = strdup(colors[SchemeIn][ColFg]);
-
-        colors[SchemeHighlight][ColBg] = strdup(colors[SchemeNorm][ColBg]);
-        colors[SchemeHighlight][ColFg] = strdup(colors[SchemeSel][ColBg]);
-
+            colors[SchemeIn][ColFg] = strdup(xval.addr);
+        }
+		if (XrmGetResource(xdb, "dmenu.accent", "*", &type, &xval)) {
+            colors[SchemeSel][ColBg] = strdup(xval.addr);
+            colors[SchemeHigh][ColFg] = strdup(xval.addr);
+        }
+		if (XrmGetResource(xdb, "dmenu.backgroundalt", "*", &type, &xval)) {
+            colors[SchemeIn][ColBg] = strdup(xval.addr);
+        }
+		if (XrmGetResource(xdb, "dmenu.accentalt", "*", &type, &xval)) {
+            colors[SchemeOut][ColBg] = strdup(xval.addr);
+        }
+		
 		XrmDestroyDatabase(xdb);
 	}
 }
@@ -960,9 +951,9 @@ main(int argc, char *argv[])
 	if ( colortemp[3])
 	   colors[SchemeSel][ColFg]  = strdup(colortemp[3]);
 	if ( colortemp[4])
-	   colors[SchemeIn][ColBg]  = strdup(colortemp[4]);
+	   colors[SchemeOut][ColBg]  = strdup(colortemp[4]);
 	if ( colortemp[5])
-	   colors[SchemeIn][ColFg]  = strdup(colortemp[5]);
+	   colors[SchemeOut][ColFg]  = strdup(colortemp[5]);
 
 	if (!drw_fontset_create(drw, (const char**)fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
