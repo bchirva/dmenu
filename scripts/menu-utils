@@ -1,0 +1,60 @@
+#!/usr/bin/env sh
+
+menu_input=""
+idx=0
+
+weather_idx=$idx
+menu_input="${menu_input} Weather
+" 
+idx=$((idx + 1))
+
+if command -v newsboat >/dev/null; then 
+    news_idx=$idx
+    menu_input="${menu_input} News
+"
+    idx=$((idx + 1))
+fi
+
+if command -v neomutt >/dev/null; then 
+    mail_idx=$idx
+    menu_input="${menu_input}󰇮 Mail 
+"
+    idx=$((idx + 1))
+fi
+
+if command -v btm >/dev/null; then
+    system_idx=$idx
+    menu_input="${menu_input} System monitor
+"
+    idx=$((idx + 1))
+fi
+
+theme_idx=$idx
+menu_input="${menu_input} Colorschemes
+"
+idx=$((idx + 1))
+
+if command -v nsxiv >/dev/null; then
+    wallpaper_idx=$idx
+    menu_input="${menu_input}󰸉 Wallpapers 
+"
+    idx=$((idx + 1))
+fi
+
+variant=$(printf '%s' "$menu_input" \
+    | dmenu -i -idx -p "󱓞 UTILITIES:" -l $idx)
+
+if [ -z "$variant" ]; then
+    exit 1
+fi
+
+case "$variant" in 
+    "$weather_idx") $TERMINAL -e bash -c "curl wttr.in/$(basename "$(readlink /etc/localtime)"); read" ;;
+    "$news_idx")    $TERMINAL -e newsboat ;;
+    "$mail_idx")    $TERMINAL -e neomutt ;;
+    "$system_idx")  $TERMINAL -e btm ;;
+    "$theme_idx")   menu-colorscheme ;;
+    "$wallpaper_idx") wallpapers-ctrl select ;;
+    *) exit 1 ;;
+esac 
+

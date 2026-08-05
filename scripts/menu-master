@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+
+. "$XDG_CONFIG_HOME/shell/theme.sh"
+
+main() {
+    menu_entries() {
+        printf '%s\n' " Audio output"
+        printf '%s\n' " Audio input"
+        printf '%s\n' "󰖟 Network"
+        printf '%s\n' "󰂯 Bluetooth"
+    }
+
+    variant=$(menu_entries \
+        | dmenu -i -idx -p " SETTINGS:" -l 4)
+
+    case $variant in 
+        0) menu-audio output ;;
+        1) menu-audio input ;;
+        2) menu-network main;;
+        3) menu-bluetooth main;;
+        *) exit 1;;
+    esac
+}
+
+main "$@"

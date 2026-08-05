@@ -1,0 +1,41 @@
+#!/usr/bin/env sh
+
+if ! command -v xkb-switch > /dev/null ; then 
+    exit 1
+fi
+
+. "$XDG_CONFIG_HOME/shell/theme.sh"
+
+main() {
+    layouts=$(xkb-switch --list)
+    current_layout=$(xkb-switch -p)
+    layouts_count=$(printf '%s\n' "$layouts" | wc -l)
+    current_layout_idx=0
+
+    menu_input() {
+        for l in $layouts; do
+            printf '%s\n' "  $l"
+        done
+    }
+
+    i=0
+    for l in $layouts; do
+        if [ "$l" = "$current_layout" ]; then
+            current_layout_idx="$i"
+        fi
+        i=$((i + 1))
+    done
+
+    # shellcheck disable=SC2086
+    variant=$(menu_input \
+        | dmenu -i -idx -p " KEYBOARD LAYOUT:" \
+        -n "$current_layout_idx" \
+        -l "$layouts_count" )
+
+    if [ -n "$variant" ]; then
+        selected_layout=$(printf '%s\n' "$layouts" | sed -n "$((variant + 1))p")
+        xkb-switch -s "$selected_layout"
+    fi
+}
+
+main "$@"

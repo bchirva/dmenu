@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+
+. "$XDG_CONFIG_HOME/shell/theme.sh"
+
+main() {
+    menu_input() {
+        printf '%s\n' " Shutdown"
+        printf '%s\n' "󰑓 Reboot"
+        printf '%s\n' " Lock"
+    }
+
+    variant=$(menu_input \
+        | dmenu -i -idx -p " SYSTEM:" -l 3 )
+
+    case $variant in
+        0) menu-confirm " Shutdown" \
+            && systemctl poweroff ;;
+        1) menu-confirm "󰑓 Reboot" \
+            && systemctl reboot ;;
+        2) loginctl lock-session "$XDG_SESSION_ID" ;;
+    esac
+}
+
+main "$@"

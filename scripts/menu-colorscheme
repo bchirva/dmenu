@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+source "$XDG_CONFIG_HOME/shell/theme.sh"
+
+function main() {
+    local -r colorschemes_dir="$(dirname "$(readlink -f "$XDG_CONFIG_HOME/rofi/colors.rasi")")/.."
+
+    readarray -t schemes <<< "$(find "$colorschemes_dir" -maxdepth 1 -mindepth 1 -type d -printf '%f\n')"
+
+    function menu_input(){
+        for i in ${!schemes[*]} 
+        do
+            echo -en " ${schemes[$i]}\n"
+        done
+    }
+
+    local -r active_scheme=$(readlink "$colorschemes_dir/active")
+    for i in ${!schemes[*]}
+    do
+        if [ "${schemes[$i]}" = "$active_scheme" ]; then
+            local -r active_scheme_idx="$i"
+        fi
+    done
+
+    local -r variant=$(menu_input \
+        | dmenu -i -idx -p " COLORSCHEME:" \
+        -n "$active_scheme" \
+        -l ${#schemes[@]} )
+
+    if [ -n "$variant" ]; then
+        local -r new_scheme=${schemes[$variant]}
+
+        rm "$colorschemes_dir/active"
+        ln -srf "$colorschemes_dir/$new_scheme" "$colorschemes_dir/active"
+
+        xrdb -merge ${HOME}/.Xresources
+
+        pgrep -x dwm >/dev/null \
+            && pkill -HUP dwm
+        pgrep -x dwmblocks >/dev/null \
+            && pkill -USR1 dwmblocks
+
+        pgrep -x dunst >/dev/null \
+            && pkill dunst && dunst &
+    fi
+}
+
+main "$@"

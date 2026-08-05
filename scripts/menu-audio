@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+if ! command -v pactl > /dev/null ; then
+    exit 1
+fi
+
+function main() {
+    local device_type=$1
+
+    local menu_input="" 
+
+    case $device_type in
+        output|sink)   
+            device_type="sink"
+            local -r device_icon=""
+            local -r volume_up_icon="󰝝"
+            local -r volume_down_icon="󰝞"
+            local -r mute_icon="󰝟"
+            ;;
+        input|source)    
+            device_type="source"
+            local -r device_icon=""
+            local -r volume_up_icon="󰢴"
+            local -r volume_down_icon="󰢳"
+            local -r mute_icon=""
+            ;;
+        *) exit 2 ;;
+    esac
+
+    menu_input+="$volume_up_icon Volume +10%\n"
+    menu_input+="$volume_down_icon Volume -10%\n"
+
+    local -r device_id_list="$(pactl list short "${device_type}s" \
+        | cut -f 2 \
+        | grep -v "\.monitor$")"
+    local -r active_device_id="$(pactl "get-default-$device_type")"
+
+    local -r active_device_mute="$(pactl "get-${device_type}-mute" "$active_device_id" \
+        | sed "s/^[^ ]* // ; s/yes/true/ ; s/no/false/")"
+
+    if $active_device_mute; then 
+        menu_input+="$mute_icon Unmute\n"
+    else 
+        menu_input+="$mute_icon Mute\n"
+    fi 
+
+    local device_name=""
+    while read -r line; do 
+        device_name="$(pactl list "${device_type}s" \
+            | grep -A 1 "${line}$" \
+            | sed -n "2{s/^.*: //; p}")"
+        menu_input+="$device_icon $device_name\n"
+
+    done <<< "$device_id_list"
+
+    local -r active_device_idx="$(grep -n "$active_device_id" <<< "$device_id_list" \
+        | cut -d ':' -f 1)"
+
+    local -r variant=$(echo -en "$menu_input" \
+        | dmenu -i -idx -p "$device_icon AUDIO:" \
+        -n $((active_device_idx + 2)) \
+        -l $(($(wc -l <<< "$device_id_list") + 3)) )
+
+    if [ -n "$variant" ]; then
+        case $variant in
+            0) pactl "set-${device_type}-volume" "$active_device_id" "+10%" ; $0 "$1" 0 ;;
+            1) pactl "set-${device_type}-volume" "$active_device_id" "-10%" ; $0 "$1" 1 ;;
+            2) pactl "set-${device_type}-mute"   "$active_device_id" toggle ;;
+            *) 
+                local -r selected_device_id="$(sed -n "$((variant - 2))p" <<< "$device_id_list")"
+
+                local channel=""
+                case "$device_type" in
+                    sink)   channel="sink-input" ;;
+                    source) channel="source-output" ;;
+                    *) exit 2
+                esac
+
+                pactl "set-default-${device_type}" "$selected_device_id"
+                while read -r line; do 
+                    pactl "move-${channel}" "$line" "$selected_device_id"
+                done <<< "$(pactl list "${channel}s" short | cut -f 1)"
+        esac
+    fi
+}
+
+main "$@"

@@ -1,0 +1,63 @@
+#!/bin/sh
+
+config_file="$XDG_CONFIG_HOME/sxhkd/sxhkdrc"
+
+if [ ! -r "$config_file" ]; then
+    exit 1
+fi
+
+variant="$(awk '
+function save_binding() {
+    if (keybinding == "" || command == "")
+        return
+
+    count++
+    commands[count] = command
+    keybindings[count] = keybinding
+
+    if (length(command) > command_width)
+        command_width = length(command)
+}
+
+{
+    line = $0
+
+    sub(/#.*/, "", line)
+    sub(/[[:space:]]+$/, "", line)
+
+    if (line ~ /^[[:space:]]*$/)
+        next
+
+    if (line ~ /^[[:space:]]/) {
+        sub(/^[[:space:]]+/, "", line)
+
+        if (command == "")
+            command = line
+        else
+            command = command " " line
+
+        next
+    }
+
+    save_binding()
+
+    keybinding = line
+    command = ""
+}
+
+END {
+    save_binding()
+
+    for (i = 1; i <= count; i++)
+        printf "  %-*s  [ %s ]\n",
+               command_width,
+               commands[i],
+               keybindings[i]
+}
+' "$config_file" \
+    | dmenu -p "  sxhkd help" \
+    | sed -E 's/^[^[:space:]]+[[:space:]]+//; s/[[:space:]]*\[[^][]*\][[:space:]]*$//')"
+
+$variant
+
+

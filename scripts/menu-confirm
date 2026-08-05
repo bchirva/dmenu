@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+
+main() {
+    CONFIRM_STR="${1:- Confirm}"
+    
+    case $(printf '%s\n%s\n' "󰜺 Cancel" "$CONFIRM_STR" \
+        | dmenu -i -idx -p " CONFIRM:" -l 2 ) in 
+        1) return 0 ;;
+        *) return 1 ;;
+    esac 
+}
+
+main "$@"
