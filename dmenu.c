@@ -22,7 +22,7 @@
 
 /* macros */
 #define INTERSECT(x,y,w,h,r)  (MAX(0, MIN((x)+(w),(r).x_org+(r).width)  - MAX((x),(r).x_org)) \
-                             * MAX(0, MIN((y)+(h),(r).y_org+(r).height) - MAX((y),(r).y_org)))
+							 * MAX(0, MIN((y)+(h),(r).y_org+(r).height) - MAX((y),(r).y_org)))
 #define TEXTW(X)              (drw_fontset_getwidth(drw, (X)) + lrpad)
 #define NUMBERSMAXDIGITS      100
 #define NUMBERSBUFSIZE        (NUMBERSMAXDIGITS * 2) + 1
@@ -61,7 +61,7 @@ static Drw *drw;
 static Clr *scheme[SchemeLast];
 
 /* Temporary arrays to allow overriding xresources values */
-static char *colortemp[6];
+static char *colortemp[7];
 static char *tempfonts;
 
 #include "config.h"
@@ -142,7 +142,7 @@ cistrstr(const char *h, const char *n)
 
 	for (; *h; ++h) {
 		for (i = 0; n[i] && tolower((unsigned char)n[i]) ==
-		            tolower((unsigned char)h[i]); ++i)
+					tolower((unsigned char)h[i]); ++i)
 			;
 		if (n[i] == '\0')
 			return (char *)h;
@@ -198,13 +198,13 @@ drawitem(struct item *item, int x, int y, int w)
 		drw_setscheme(drw, scheme[SchemeNorm]);
 
 	int r = drw_text(drw, x, y, w, bh, lrpad / 2, item->text, 0);
-    if (item != sel && ! item->out)
-	    drawhighlights(item, x, y, w);
+	if (item != sel && ! item->out)
+		drawhighlights(item, x, y, w);
 	return r;
 }
 
 static void
-recalculatenumbers()
+recalculatenumbers(void)
 {
 	unsigned int numer = 0, denom = 0;
 	struct item *item;
@@ -237,7 +237,7 @@ drawmenu(void)
 	w = (lines > 0 || !matches) ? mw - x : inputw;
 	drw_setscheme(drw, scheme[SchemeIn]);
 	if (passwd) {
-	        censort = ecalloc(1, sizeof(text));
+			censort = ecalloc(1, sizeof(text));
 		memset(censort, '*', strlen(text));
 		drw_text(drw, x, 0, w, bh, lrpad / 2, censort, 0);
 		free(censort);
@@ -304,7 +304,7 @@ grabkeyboard(void)
 	/* try to grab keyboard, we may have to wait for another process to ungrab */
 	for (i = 0; i < 1000; i++) {
 		if (XGrabKeyboard(dpy, DefaultRootWindow(dpy), True, GrabModeAsync,
-		                  GrabModeAsync, CurrentTime) == GrabSuccess)
+						  GrabModeAsync, CurrentTime) == GrabSuccess)
 			return;
 		nanosleep(&ts, NULL);
 	}
@@ -458,7 +458,7 @@ keypress(XKeyEvent *ev)
 		case XK_y: /* paste selection */
 		case XK_Y:
 			XConvertSelection(dpy, (ev->state & ShiftMask) ? clip : XA_PRIMARY,
-			                  utf8, utf8, win, CurrentTime);
+							  utf8, utf8, win, CurrentTime);
 			return;
 		case XK_Left:
 		case XK_KP_Left:
@@ -626,8 +626,8 @@ paste(void)
 
 	/* we have been given the current selection, now insert it into input */
 	if (XGetWindowProperty(dpy, win, utf8, 0, (sizeof text / 4) + 1, False,
-	                   utf8, &da, &di, &dl, &dl, (unsigned char **)&p)
-	    == Success && p) {
+					   utf8, &da, &di, &dl, &dl, (unsigned char **)&p)
+		== Success && p) {
 		insert(p, (q = strchr(p, '\n')) ? q - p : (ssize_t)strlen(p));
 		XFree(p);
 	}
@@ -642,9 +642,9 @@ readstdin(void)
 	ssize_t len;
 
 	if(passwd){
-    	inputw = lines = 0;
-    	return;
-  	}
+		inputw = lines = 0;
+		return;
+	}
 
 	/* read each line from stdin and add it to the item list */
 	for (i = 0; (len = getline(&line, &linesiz, stdin)) != -1; i++) {
@@ -656,7 +656,7 @@ readstdin(void)
 		if (line[len - 1] == '\n')
 			line[len - 1] = '\0';
 		if (!(items[i].text = strdup(line)))
- 			die("cannot strdup %u bytes:", strlen(line) + 1);
+			die("cannot strdup %u bytes:", strlen(line) + 1);
 		items[i].width = TEXTW(line);
 		items[i].index = i;
 		items[i].out = 0;
@@ -779,7 +779,7 @@ setup(void)
 	{
 		if (!XGetWindowAttributes(dpy, parentwin, &wa))
 			die("could not get embedding window attributes: 0x%lx",
-			    parentwin);
+				parentwin);
 
 		if (centered) {
 			mw = MIN(MAX(max_textw() + promptw, min_width), wa.width);
@@ -806,8 +806,8 @@ setup(void)
 	swa.background_pixel = scheme[SchemeNorm][ColBg].pixel;
 	swa.event_mask = ExposureMask | KeyPressMask | VisibilityChangeMask;
 	win = XCreateWindow(dpy, root, x, y, mw, mh, border_width,
-	                    CopyFromParent, CopyFromParent, CopyFromParent,
-	                    CWOverrideRedirect | CWBackPixel | CWEventMask, &swa);
+						CopyFromParent, CopyFromParent, CopyFromParent,
+						CWOverrideRedirect | CWBackPixel | CWEventMask, &swa);
 	if (border_width)
 		XSetWindowBorder(dpy, win, scheme[SchemeSel][ColBg].pixel);
 	XSetClassHint(dpy, win, &ch);
@@ -817,7 +817,7 @@ setup(void)
 		die("XOpenIM failed: could not open input device");
 
 	xic = XCreateIC(xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
-	                XNClientWindow, win, XNFocusWindow, win, NULL);
+					XNClientWindow, win, XNFocusWindow, win, NULL);
 
 	XMapRaised(dpy, win);
 	if (embed) {
@@ -838,7 +838,8 @@ static void
 usage(void)
 {
 	die("usage: dmenu [-bfivP] [-l lines] [-p prompt] [-fn font] [-m monitor] [-idx]\n"
-	    "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]");
+		"             [-nb color] [-nf color] [-ab color] [-af color] [-i item]\n"
+		"             [-a color] [-ac color] [-bb color] [-w windowid] [-P]");
 }
 
 void
@@ -851,29 +852,35 @@ readxresources(void) {
 		XrmDatabase xdb = XrmGetStringDatabase(xrm);
 		XrmValue xval;
 
-		if (XrmGetResource(xdb, "dmenu.font", "*", &type, &xval))
+		if (XrmGetResource(xdb, "dmenu.font", "*", &type, &xval)) {
 			fonts[0] = strdup(xval.addr);
+		}
+
 		if (XrmGetResource(xdb, "dmenu.background", "*", &type, &xval)) {
 			colors[SchemeNorm][ColBg] = strdup(xval.addr);
-            colors[SchemeHigh][ColBg] = strdup(xval.addr);
-            colors[SchemeSel][ColFg] = strdup(xval.addr);
-            colors[SchemeOut][ColFg] = strdup(xval.addr);
-        }
+			colors[SchemeHigh][ColBg] = strdup(xval.addr);
+		}
 		if (XrmGetResource(xdb, "dmenu.foreground", "*", &type, &xval)) {
 			colors[SchemeNorm][ColFg] = strdup(xval.addr);
-            colors[SchemeIn][ColFg] = strdup(xval.addr);
-        }
+			colors[SchemeIn][ColFg] = strdup(xval.addr);
+		}
 		if (XrmGetResource(xdb, "dmenu.accent", "*", &type, &xval)) {
-            colors[SchemeSel][ColBg] = strdup(xval.addr);
-            colors[SchemeHigh][ColFg] = strdup(xval.addr);
-        }
-		if (XrmGetResource(xdb, "dmenu.backgroundalt", "*", &type, &xval)) {
-            colors[SchemeIn][ColBg] = strdup(xval.addr);
-        }
-		if (XrmGetResource(xdb, "dmenu.accentalt", "*", &type, &xval)) {
-            colors[SchemeOut][ColBg] = strdup(xval.addr);
-        }
-		
+			colors[SchemeSel][ColBg] = strdup(xval.addr);
+			colors[SchemeHigh][ColFg] = strdup(xval.addr);
+		}
+		if (XrmGetResource(xdb, "dmenu.accentbg", "*", &type, &xval)) {
+			colors[SchemeOut][ColBg] = strdup(xval.addr);
+		}
+		if (XrmGetResource(xdb, "dmenu.accentfg", "*", &type, &xval)) {
+			colors[SchemeOut][ColFg] = strdup(xval.addr);
+		}
+		if (XrmGetResource(xdb, "dmenu.accentcontrast", "*", &type, &xval)) {
+			colors[SchemeSel][ColFg] = strdup(xval.addr);
+		}
+		if (XrmGetResource(xdb, "dmenu.backgroundbright", "*", &type, &xval)) {
+			colors[SchemeIn][ColBg] = strdup(xval.addr);
+		}
+
 		XrmDestroyDatabase(xdb);
 	}
 }
@@ -901,7 +908,7 @@ main(int argc, char *argv[])
 		} else if (!strcmp(argv[i], "-idx"))  /* adds ability to return index in list */
 			print_index = 1;
 		else if (!strcmp(argv[i], "-P"))    /* input password */
-                passwd = 1;
+				passwd = 1;
 		else if (i + 1 == argc)
 			usage();
 		/* these options take one argument */
@@ -912,19 +919,21 @@ main(int argc, char *argv[])
 		else if (!strcmp(argv[i], "-p"))   /* adds prompt to left of input field */
 			prompt = argv[++i];
 		else if (!strcmp(argv[i], "-fn"))  /* font or font set */
-            tempfonts = argv[++i];
+			tempfonts = argv[++i];
 		else if (!strcmp(argv[i], "-nb"))  /* normal background color */
-            colortemp[0] = argv[++i];
+			colortemp[0] = argv[++i];
 		else if (!strcmp(argv[i], "-nf"))  /* normal foreground color */
-            colortemp[1] = argv[++i];
-		else if (!strcmp(argv[i], "-sb"))  /* selected background color */
-            colortemp[2] = argv[++i];
-		else if (!strcmp(argv[i], "-sf"))  /* selected foreground color */
-            colortemp[3] = argv[++i];
-		else if (!strcmp(argv[i], "-ob"))  /* outline background color */
-            colortemp[4] = argv[++i];
-		else if (!strcmp(argv[i], "-of"))  /* outline foreground color */
-            colortemp[5] = argv[++i];
+			colortemp[1] = argv[++i];
+		else if (!strcmp(argv[i], "-a"))   /* accent color */
+		   colortemp[2] = argv[++i];
+		else if (!strcmp(argv[i], "-ab"))  /* accent background color */
+			colortemp[3] = argv[++i];
+		else if (!strcmp(argv[i], "-af"))  /* accent foreground color */
+			colortemp[4] = argv[++i];
+		else if (!strcmp(argv[i], "-ac"))  /* accent contrast color */
+			colortemp[5] = argv[++i];
+		else if (!strcmp(argv[i], "-bb"))  /* background bright color */
+			colortemp[6] = argv[++i];
 		else if (!strcmp(argv[i], "-w"))   /* embedding window id */
 			embed = argv[++i];
 		else if (!strcmp(argv[i], "-n"))   /* preselected item */
@@ -944,24 +953,37 @@ main(int argc, char *argv[])
 		parentwin = root;
 	if (!XGetWindowAttributes(dpy, parentwin, &wa))
 		die("could not get embedding window attributes: 0x%lx",
-		    parentwin);
+			parentwin);
 	drw = drw_create(dpy, screen, root, wa.width, wa.height);
 	readxresources();
 	/* Now we check whether to override xresources with commandline parameters */
 	if ( tempfonts )
 	   fonts[0] = strdup(tempfonts);
-	if ( colortemp[0])
-	   colors[SchemeNorm][ColBg] = strdup(colortemp[0]);
-	if ( colortemp[1])
-	   colors[SchemeNorm][ColFg] = strdup(colortemp[1]);
-	if ( colortemp[2])
-	   colors[SchemeSel][ColBg]  = strdup(colortemp[2]);
-	if ( colortemp[3])
-	   colors[SchemeSel][ColFg]  = strdup(colortemp[3]);
-	if ( colortemp[4])
-	   colors[SchemeOut][ColBg]  = strdup(colortemp[4]);
-	if ( colortemp[5])
-	   colors[SchemeOut][ColFg]  = strdup(colortemp[5]);
+
+	if (colortemp[0]) {
+		colors[SchemeNorm][ColBg] = strdup(colortemp[0]);
+		colors[SchemeHigh][ColBg] = strdup(colortemp[0]);
+	}
+	if (colortemp[1]) {
+		colors[SchemeNorm][ColFg] = strdup(colortemp[1]);
+		colors[SchemeIn][ColFg] = strdup(colortemp[1]);
+	}
+	if (colortemp[2]) {
+		colors[SchemeSel][ColBg] = strdup(colortemp[2]);
+		colors[SchemeHigh][ColFg] = strdup(colortemp[2]);
+	}
+	if (colortemp[3]) {
+		colors[SchemeOut][ColBg] = strdup(colortemp[3]);
+	}
+	if (colortemp[4]) {
+		colors[SchemeOut][ColFg] = strdup(colortemp[4]);
+	}
+	if (colortemp[5]) {
+		colors[SchemeSel][ColFg] = strdup(colortemp[5]);
+	}
+	if (colortemp[6]) {
+		colors[SchemeIn][ColBg] = strdup(colortemp[6]);
+	}
 
 	if (!drw_fontset_create(drw, (const char**)fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
