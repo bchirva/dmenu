@@ -16,13 +16,15 @@ dmenu \- dynamic menu
 .IR color ]
 .RB [ \-nf
 .IR color ]
-.RB [ \-sb
+.RB [ \-a
 .IR color ]
-.RB [ \-sf
+.RB [ \-ab
 .IR color ]
-.RB [ \-ob
+.RB [ \-af
 .IR color ]
-.RB [ \-of
+.RB [ \-ac
+.IR color ]
+.RB [ \-bb
 .IR color ]
 .RB [ \-w
 .IR windowid ]
@@ -76,25 +78,28 @@ defines the prompt to be displayed to the left of the input field.
 defines the font or font set used.
 .TP
 .BI \-nb " color"
-defines the normal background color.
+defines the normal background color. Also sets the background for the prompt and highlights.
 .IR #RGB ,
 .IR #RRGGBB ,
 and X color names are supported.
 .TP
 .BI \-nf " color"
-defines the normal foreground color.
+defines the normal foreground color. Also sets the input field text color.
 .TP
-.BI \-sb " color"
-defines the selected background color.
+.BI \-a " color"
+defines the accent color. Also sets the selected item's background and the prompt/highlight text color.
 .TP
-.BI \-sf " color"
-defines the selected foreground color.
+.BI \-ab " color"
+defines the accent background color for previously selected items (multiple selection).
 .TP
-.BI \-ob " color"
-defines the outline background color (for multiple selection).
+.BI \-af " color"
+defines the accent foreground color for previously selected items (multiple selection).
 .TP
-.BI \-of " color"
-defines the outline foreground color (for multiple selection).
+.BI \-ac " color"
+defines the accent contrast color for the selected item's text.
+.TP
+.BI \-bb " color"
+defines the bright background color for the input field.
 .TP
 .B \-v
 prints version information to stdout, then exits.
